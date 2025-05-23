@@ -10,38 +10,42 @@ load_dotenv()
 
 def prompt_user_for_character():
     """Prompt the user for a character and return the corresponding voice line."""
-    character = input("Enter a character: ")
-    char_vl = {
-        "Iron Fist": "cheaper town hall",
-        "Luna Snow": "I am ready to put on a show"
-    }
-    #json.loads("characters.json")
+    with open('characters.json', 'r') as f:
+        char_vl = json.load(f)
 
-    if character in char_vl.keys():
-        print("Selected character:", character)
-        print("Voice line:", char_vl[character])
-        return char_vl[character]
+    user_input = input("Enter a character: ")
+    if user_input == "exit":
+        print("Exiting...")
+        exit()
+    elif user_input == "help":
+        print("Available characters: ", ', '.join(list(char_vl.keys())))
+        return prompt_user_for_character()
+    
+    if user_input.title() in char_vl.keys():
+        print("Selected character:", user_input)
+        print("Voice line:", char_vl[user_input.title()])
+        return char_vl[user_input.title()]
     else:
         print("Character not found. Please check the name and try again.")
-        prompt_user_for_character()
+        return prompt_user_for_character()
 
 
 def recoginize_vl(voice_line):
     """Recognize the voice line using Google Speech Recognition."""
     r = sr.Recognizer()
+    said_something = False
     while True:
         with sr.Microphone() as source:
-            print("Say something!")
+            if not said_something:
+                print("Say something!")
             try:
                 audio = r.listen(source)
-                google_api_key = os.getenv("GOOGLE_SPEECH_RECOGNITION_API_KEY")
                 voice_to_text = r.recognize_google(audio)
                 print("You said:", voice_to_text)
                 if voice_to_text.lower() == voice_line.lower():
+                    said_something = True
                     return True
             except Exception as e:
-                #print("Error:", e)
-                #print("Could not understand the audio. Please try again.")
                 continue
 
 def ult_check(voice_line):
